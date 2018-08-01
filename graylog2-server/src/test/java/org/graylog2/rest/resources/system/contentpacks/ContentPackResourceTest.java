@@ -123,7 +123,7 @@ public class ContentPackResourceTest {
     public void getContentPack() throws Exception {
         final ContentPack contentPack = objectMapper.readValue(CONTENT_PACK, ContentPack.class);
         final Set<ContentPack> contentPackSet = Collections.singleton(contentPack);
-        final Set<Constraint> constraints = Collections.EMPTY_SET;
+        final Set<Constraint> constraints = Collections.emptySet();
 
         final Map<Integer, ContentPack> contentPacks = Collections.singletonMap(1, contentPack);
         final Map<Integer, Set<Constraint>> constraintMap = Collections.singletonMap(1, constraints);
