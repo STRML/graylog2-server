@@ -35,10 +35,12 @@ import org.graylog2.contentpacks.model.ContentPackInstallation;
 import org.graylog2.contentpacks.model.ContentPackView;
 import org.graylog2.contentpacks.model.ModelId;
 import org.graylog2.contentpacks.model.Revisioned;
+import org.graylog2.contentpacks.model.constraints.Constraint;
 import org.graylog2.plugin.database.users.User;
 import org.graylog2.rest.models.system.contenpacks.responses.ContentPackInstallationRequest;
 import org.graylog2.rest.models.system.contenpacks.responses.ContentPackInstallationsResponse;
 import org.graylog2.rest.models.system.contenpacks.responses.ContentPackList;
+import org.graylog2.rest.models.system.contenpacks.responses.ContentPackResponse;
 import org.graylog2.rest.models.system.contenpacks.responses.ContentPackRevisions;
 import org.graylog2.shared.rest.resources.RestResource;
 import org.graylog2.shared.security.RestPermissions;
@@ -128,9 +130,13 @@ public class ContentPackResource extends RestResource {
             @PathParam("contentPackId") ModelId id) {
         checkPermission(RestPermissions.CONTENT_PACK_READ);
 
-        Map<Integer, ContentPack> contentPackMap = contentPackPersistenceService.findAllById(id).stream()
+        Set<ContentPack> contentPacks = contentPackPersistenceService.findAllById(id);
+        Map<Integer, ContentPack> contentPackMap = contentPacks.stream()
                 .collect(Collectors.toMap(Revisioned::revision, Function.identity()));
-        return ContentPackRevisions.create(contentPackMap);
+        Map<Integer, Set<Constraint>> constraintMap = contentPacks.stream()
+                .collect(Collectors.toMap(Revisioned::revision, contentPackService::checkConstraints));
+
+        return ContentPackRevisions.create(contentPackMap, constraintMap);
     }
 
     @GET
@@ -141,7 +147,7 @@ public class ContentPackResource extends RestResource {
             @ApiResponse(code = 500, message = "Error loading content packs")
     })
     @JsonView(ContentPackView.HttpView.class)
-    public ContentPack listContentPackRevisions(
+    public ContentPackResponse listContentPackRevisions(
             @ApiParam(name = "contentPackId", value = "Content pack ID", required = true)
             @PathParam("contentPackId") ModelId id,
             @ApiParam(name = "revision", value = "Content pack revision", required = true)
@@ -149,8 +155,10 @@ public class ContentPackResource extends RestResource {
     ) {
         checkPermission(RestPermissions.CONTENT_PACK_READ);
 
-        return contentPackPersistenceService.findByIdAndRevision(id, revision)
+        ContentPack contentPack = contentPackPersistenceService.findByIdAndRevision(id, revision)
                 .orElseThrow(() -> new NotFoundException("Content pack " + id + " with revision " + revision + " not found!"));
+        Set<Constraint> constraints = contentPackService.checkConstraints(contentPack);
+        return ContentPackResponse.create(contentPack, constraints);
     }
 
     @POST

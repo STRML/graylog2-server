@@ -298,11 +298,22 @@ public class ContentPackService {
             fulfilledConstraints.addAll(constraintChecker.checkConstraints(requiredConstraints));
         }
 
-        if (!fulfilledConstraints.equals(requiredConstraints)) {
+        final boolean allFulfilled  = fulfilledConstraints.stream().map(constraint -> constraint.fulfilled()).allMatch(p -> p.isPresent() && p.get());
+        if (!allFulfilled) {
             final Set<Constraint> failedConstraints = Sets.difference(requiredConstraints, fulfilledConstraints);
             throw new FailedConstraintsException(failedConstraints);
         }
     }
+
+    public Set<Constraint> checkConstraints(ContentPack contentPackV1) {
+        Set<Constraint> requiredConstraints = contentPackV1.requires();
+        final Set<Constraint> fulfilledConstraints = new HashSet<>();
+        for (ConstraintChecker constraintChecker : constraintCheckers) {
+            fulfilledConstraints.addAll(constraintChecker.checkConstraints(requiredConstraints));
+        }
+        return fulfilledConstraints;
+    }
+
 
     private ImmutableMap<String, ValueReference> validateParameters(Map<String, ValueReference> parameters,
                                                                     Set<Parameter> contentPackParameters) {

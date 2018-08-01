@@ -20,27 +20,22 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
-import org.graylog.autovalue.WithBeanGetter;
 import org.graylog2.contentpacks.model.ContentPack;
 import org.graylog2.contentpacks.model.constraints.Constraint;
 
-import java.util.Map;
 import java.util.Set;
 
 @JsonAutoDetect
-
 @AutoValue
-@WithBeanGetter
-public abstract class ContentPackRevisions {
-    @JsonProperty
-    public abstract Map<Integer, ContentPack> contentPackRevisions();
+public abstract class ContentPackResponse {
+    @JsonProperty("content_pack")
+    public abstract ContentPack contentPack();
 
-    @JsonProperty
-    public abstract Map<Integer, Set<Constraint>> constraints();
+    @JsonProperty("constraints")
+    public abstract Set<Constraint> constraints();
 
     @JsonCreator
-    public static ContentPackRevisions create(@JsonProperty("content_pack_revisions") Map<Integer, ContentPack> contentPackRevisions,
-                                              @JsonProperty("constraints")Map<Integer, Set<Constraint>> constraints) {
-        return new AutoValue_ContentPackRevisions(contentPackRevisions, constraints);
+    public static ContentPackResponse create(@JsonProperty("content_pack") ContentPack contentPack, @JsonProperty("constraints") Set<Constraint> constraints) {
+        return new AutoValue_ContentPackResponse(contentPack, constraints);
     }
 }

@@ -49,11 +49,16 @@ public class PluginVersionConstraintChecker implements ConstraintChecker {
                 final PluginVersionConstraint versionConstraint = (PluginVersionConstraint) constraint;
                 final Requirement requiredVersion = versionConstraint.version();
 
+                boolean result = false;
                 for (Semver pluginVersion : pluginVersions) {
                     if (requiredVersion.isSatisfiedBy(pluginVersion)) {
-                        fulfilledConstraints.add(constraint);
+                        result = true;
                     }
                 }
+                PluginVersionConstraint constraintResult = versionConstraint.toBuilder()
+                        .fulfilled(result)
+                        .build();
+                fulfilledConstraints.add(constraintResult);
             }
         }
         return fulfilledConstraints.build();
